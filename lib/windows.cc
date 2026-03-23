@@ -333,7 +333,7 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     ::SetFocus (handle);
     ::SetActiveWindow (handle);
     
-    SwitchToThisWindow(handle, FALSE);
+    SwitchToThisWindow(handle, TRUE);
 
     return Napi::Boolean::New (env, b);
 }
