@@ -340,6 +340,8 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     SendInput(1, &input1, sizeof(INPUT));
     Sleep(10);
     
+    ShowWindowAsync(handle, SW_SHOW);
+    ShowWindowAsync(handle, SW_RESTORE);
     ::SetWindowPos (handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     ::SetWindowPos (handle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     ::SetForegroundWindow (handle);
