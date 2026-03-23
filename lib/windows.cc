@@ -326,6 +326,8 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     input1.ki.dwFlags = 0;
     SendInput(1, &input1, sizeof(INPUT));
     
+    Sleep(10);
+    
     BOOL b{ SetForegroundWindow (handle) };
 
     HWND hCurWnd = ::GetForegroundWindow ();
@@ -338,6 +340,8 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     ::AttachThreadInput (dwCurID, dwMyID, FALSE);
     ::SetFocus (handle);
     ::SetActiveWindow (handle);
+    
+    Sleep(10);
     
     INPUT input2{};
     input2.type = INPUT_KEYBOARD;
