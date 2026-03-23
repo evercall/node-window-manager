@@ -339,6 +339,7 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
     
     EnsureNotMinimized(handle);
+    SendMessage(handle, WM_SYSCOMMAND, SC_RESTORE, 0);
     BOOL b{ SetForegroundWindow (handle) };
 
     HWND hCurWnd = ::GetForegroundWindow ();
