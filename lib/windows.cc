@@ -294,6 +294,24 @@ Napi::Boolean setWindowOwner (const Napi::CallbackInfo& info) {
     return Napi::Boolean::New (env, true);
 }
 
+// Ensure that the given window is not minimized.
+// If it is minimized, restore it to its normal state.
+void EnsureNotMinimized(HWND hWnd)
+{
+   WINDOWPLACEMENT placement;
+   placement.length = sizeof(placement);
+
+   if(!GetWindowPlacement(hWnd, &placement))
+      return;
+
+   BOOL minimized = (placement.showCmd & SW_SHOWMINIMIZED) != 0;
+   if(!minimized)
+      return;
+
+   placement.showCmd = SW_SHOWNORMAL;
+   SetWindowPlacement(hWnd, &placement);
+}
+
 Napi::Boolean showWindow (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
 
@@ -320,6 +338,7 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
     
+    EnsureNotMinimized(handle);
     BOOL b{ SetForegroundWindow (handle) };
 
     HWND hCurWnd = ::GetForegroundWindow ();
@@ -332,8 +351,6 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     ::AttachThreadInput (dwCurID, dwMyID, FALSE);
     ::SetFocus (handle);
     ::SetActiveWindow (handle);
-    
-    SwitchToThisWindow(handle, TRUE);
 
     return Napi::Boolean::New (env, b);
 }
