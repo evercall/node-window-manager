@@ -320,38 +320,20 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
     
-    INPUT input1{};
-    input1.type = INPUT_KEYBOARD;
-    input1.ki.wVk = VK_MENU;
-    input1.ki.dwFlags = 0;
-    
-    INPUT input2{};
-    input2.type = INPUT_KEYBOARD;
-    input2.ki.wVk = VK_MENU;
-    input2.ki.dwFlags = KEYEVENTF_KEYUP;
-    
     BOOL b{ SetForegroundWindow (handle) };
 
     HWND hCurWnd = ::GetForegroundWindow ();
     DWORD dwMyID = ::GetCurrentThreadId ();
     DWORD dwCurID = ::GetWindowThreadProcessId (hCurWnd, NULL);
     ::AttachThreadInput (dwCurID, dwMyID, TRUE);
- 
-    SendInput(1, &input1, sizeof(INPUT));
-    Sleep(10);
-    
-    ShowWindowAsync(handle, SW_SHOW);
-    ShowWindowAsync(handle, SW_RESTORE);
     ::SetWindowPos (handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     ::SetWindowPos (handle, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
     ::SetForegroundWindow (handle);
-    
-    Sleep(10);
-    SendInput(1, &input2, sizeof(INPUT));
-    
     ::AttachThreadInput (dwCurID, dwMyID, FALSE);
     ::SetFocus (handle);
     ::SetActiveWindow (handle);
+    
+    SwitchToThisWindow(handle, FALSE);
 
     return Napi::Boolean::New (env, b);
 }
