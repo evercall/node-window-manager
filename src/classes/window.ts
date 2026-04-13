@@ -5,10 +5,10 @@ import { IRectangle } from "../interfaces";
 import { EmptyMonitor } from "./empty-monitor";
 
 export class Window {
-  public id: number;
+  public id?: number;
 
-  public processId: number;
-  public path: string;
+  public processId?: number;
+  public path?: string;
 
   constructor(id: number) {
     if (!addon) return;
@@ -19,13 +19,14 @@ export class Window {
     this.path = path;
   }
 
-  getBounds(): IRectangle {
+  getBounds(): IRectangle|undefined {
     if (!addon) return;
 
     const bounds = addon.getWindowBounds(this.id);
 
     if (process.platform === "win32") {
       const sf = this.getMonitor().getScaleFactor();
+      if (sf === undefined) return;
 
       bounds.x = Math.floor(bounds.x / sf);
       bounds.y = Math.floor(bounds.y / sf);
@@ -43,11 +44,12 @@ export class Window {
 
     if (process.platform === "win32") {
       const sf = this.getMonitor().getScaleFactor();
+      if (sf === undefined) return;
 
-      newBounds.x = Math.floor(newBounds.x * sf);
-      newBounds.y = Math.floor(newBounds.y * sf);
-      newBounds.width = Math.floor(newBounds.width * sf);
-      newBounds.height = Math.floor(newBounds.height * sf);
+      newBounds.x = Math.floor((newBounds.x ?? 0) * sf);
+      newBounds.y = Math.floor((newBounds.y ?? 0) * sf);
+      newBounds.width = Math.floor((newBounds.width ?? 0) * sf);
+      newBounds.height = Math.floor((newBounds.height ?? 0) * sf);
 
       addon.setWindowBounds(this.id, newBounds);
     } else if (process.platform === "darwin") {
@@ -56,7 +58,7 @@ export class Window {
   }
 
   getTitle(): string {
-    if (!addon) return;
+    if (!addon) return '';
     return addon.getWindowTitle(this.id);
   }
 
@@ -120,13 +122,13 @@ export class Window {
     addon.redrawWindow(this.id);
   }
 
-  isWindow(): boolean {
-    if (!addon) return;
+  isWindow(): boolean|undefined {
+    if (!addon) return false;
 
     if (process.platform === "win32") {
       return this.path && this.path !== "" && addon.isWindow(this.id);
     } else if (process.platform === "darwin") {
-      return this.path && this.path !== "" && !!addon.initWindow(this.id);
+      return this.path !== undefined && this.path !== "" && !!addon.initWindow(this.id);
     }
   }
 
@@ -151,6 +153,7 @@ export class Window {
   }
 
   getIcon(size: 16 | 32 | 64 | 256 = 64) {
+    if (!this.path) return;
     return extractFileIcon(this.path, size);
   }
 
@@ -160,7 +163,7 @@ export class Window {
     let handle = window;
 
     if (window instanceof Window) {
-      handle = window.id;
+      handle = window.id!;
     } else if (!window) {
       handle = 0;
     }

@@ -1,17 +1,16 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "typeRoots": ["./node_modules/@types"],
     "noImplicitAny": true,
-    "module": "commonjs",
+    "module": "nodenext",
     "target": "es2015",
     "sourceMap": true,
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "declaration": true,
-    "types": ["node"]
+    "types": ["node"],
+    "rootDir": "."
   },
   "include": ["./src/**/*.ts"],
-  "exclude": ["node_modules/**/*"]
 }

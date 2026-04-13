@@ -80,14 +80,15 @@ class WindowManager extends EventEmitter {
 
   getPrimaryMonitor = (): Monitor | EmptyMonitor => {
     if (process.platform === 'win32') {
-      return this.getMonitors().find(x => x.isPrimary);
+      const found = this.getMonitors().find(x => x.isPrimary());
+      return found ?? new EmptyMonitor();
     } else {
       return new EmptyMonitor();
     }
   }
 
   createProcess = (path: string, cmd = ""): number => {
-    if (!addon || !addon.createProcess) return;
+    if (!addon || !addon.createProcess) return -1;
     return addon.createProcess(path, cmd);
   };
 }
