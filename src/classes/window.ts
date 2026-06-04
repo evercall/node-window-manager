@@ -107,13 +107,13 @@ export class Window {
     }
   }
 
-  bringToTop() {
-    if (!addon) return;
+  bringToTop(): boolean {
+    if (!addon) return false;
 
     if (process.platform === "darwin") {
-      addon.bringWindowToTop(this.id, this.processId);
+      return addon.bringWindowToTop(this.id, this.processId);
     } else {
-      addon.bringWindowToTop(this.id);
+      return addon.bringWindowToTop(this.id);
     }
   }
 
@@ -171,8 +171,11 @@ export class Window {
     addon.setWindowOwner(this.id, handle);
   }
 
-  getOwner() {
+  getOwner(): Window|undefined {
     if (!addon || !addon.getWindowOwner) return;
+    const owner = addon.getWindowOwner(this.id);
+    if (owner === 0) return;
+
     return new Window(addon.getWindowOwner(this.id));
   }
 }

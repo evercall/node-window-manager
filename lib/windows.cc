@@ -232,7 +232,7 @@ Napi::Number getWindowOwner (const Napi::CallbackInfo& info) {
 
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
 
-    return Napi::Number::New (env, GetWindowLongPtrA (handle, GWLP_HWNDPARENT));
+    return Napi::Number::New (env, reinterpret_cast<int64_t> (GetWindow (handle, GW_OWNER)));
 }
 
 Napi::Number getMonitorScaleFactor (const Napi::CallbackInfo& info) {
@@ -299,16 +299,28 @@ Napi::Boolean setWindowOwner (const Napi::CallbackInfo& info) {
 void EnsureNotMinimized(HWND hWnd)
 {
    WINDOWPLACEMENT placement;
-   placement.length = sizeof(placement);
+   placement.length = sizeof(WINDOWPLACEMENT);
 
    if(!GetWindowPlacement(hWnd, &placement))
       return;
 
-   BOOL minimized = (placement.showCmd & SW_SHOWMINIMIZED) != 0;
-   if(!minimized)
-      return;
+   switch (placement.showCmd) {
+    case SW_SHOWMAXIMIZED:
+        ShowWindowAsync(hWnd, SW_SHOWMAXIMIZED);
+        break;
+    case SW_SHOWMINIMIZED:
+        placement.showCmd = SW_RESTORE;
+        //ShowWindowAsync(hWnd, SW_RESTORE);
+        break;
+    default:
+        placement.showCmd = SW_NORMAL;
+        ShowWindowAsync(hWnd, SW_NORMAL);
+        break;
+   }
 
-   placement.showCmd = SW_RESTORE;
+   if (placement.flags == WPF_RESTORETOMAXIMIZED) {
+    placement.showCmd = SW_MAXIMIZE;
+   }
    SetWindowPlacement(hWnd, &placement);
 }
 
@@ -337,14 +349,22 @@ Napi::Boolean showWindow (const Napi::CallbackInfo& info) {
 Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     Napi::Env env{ info.Env () };
     auto handle{ getValueFromCallbackData<HWND> (info, 0) };
-    
+
+    Napi::Function consoleErr = env.Global().Get("console").As<Napi::Object>().Get("error").As<Napi::Function>();
+
     EnsureNotMinimized(handle);
-    
+
+    // Napi::Function consoleLog = env.Global().Get("console").As<Napi::Object>().Get("log").As<Napi::Function>();
+    // std::string debug2 = "[NodeWindowManager]: DEBUG: IsIconic = " + std::to_string(IsIconic(handle)) + " IsZoomed = " + std::to_string(IsZoomed(handle)) + " IsVisible = " + std::to_string(IsWindowVisible(handle)) + " ForegroundWindowHandle = " + std::to_string((int)GetForegroundWindow()) + " DesiredHandle = " + std::to_string((int)handle);
+    // consoleLog.Call(env.Global(), { Napi::String::New(env, debug2) });
+
     BOOL restored = OpenIcon(handle);
     if (restored == 0) {
         DWORD lastError = GetLastError();
-        std::cerr << "bringWindowToTop: Error: " << lastError << std::endl;
+        std::string err = "[NodeWindowManager Windows OpenIcon]: ERROR: " + std::to_string(lastError);
+        consoleErr.Call(env.Global(), { Napi::String::New(env, err)});
     }
+
     BOOL b{ SetForegroundWindow (handle) };
 
     HWND hCurWnd = ::GetForegroundWindow ();
@@ -358,7 +378,9 @@ Napi::Boolean bringWindowToTop (const Napi::CallbackInfo& info) {
     ::SetFocus (handle);
     ::SetActiveWindow (handle);
 
-    return Napi::Boolean::New (env, b);
+    BOOL result = BringWindowToTop(handle);
+
+    return Napi::Boolean::New (env, b & restored & result);
 }
 
 Napi::Boolean redrawWindow (const Napi::CallbackInfo& info) {
