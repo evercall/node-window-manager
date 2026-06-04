@@ -308,7 +308,7 @@ void EnsureNotMinimized(HWND hWnd)
    if(!minimized)
       return;
 
-   placement.showCmd = SW_SHOWNORMAL;
+   placement.showCmd = SW_RESTORE;
    SetWindowPlacement(hWnd, &placement);
 }
 
